@@ -1,0 +1,3 @@
+*.so
+*.back
+src/C_files/*
