@@ -12,15 +12,20 @@ class move(uart):
         super(move, self).__init__(port, rate)
         self.LegServos = LEG_SERVOS
         self.Torque(0xFF, self.ON)
+
+    # CSVファイルのopen
     def FileOpen(self, FileName=None):
         try:
             self.fp = open(FileName,'r')
             self.it = iter(self.fp.readline,'')# イテレータ
         except:
             return IOError
+
+    # CSVファイルのopen
     def FileClose(self):
         self.fp.close()
-    def DataImport(self):
+    # CSVファイルのopen
+    def FileImport(self):
         Data = []
         while True:
             try:
@@ -41,6 +46,21 @@ class move(uart):
             if DataList[-1] != ('&' or '&'+'\r'):# 配列の最後
                 break
         return Data
+
+    # 引数がファイル名のとき
+    def CSVAct(self, FileName, sleep):
+        try:
+            self.FileOpen('parameter/'+FileName)
+            Data = self.FileImport()
+            while Data != None:
+                self.Write(self.LongPacket(self.ADDRESS_POS, Data))
+                time.sleep(sleep)
+                Data = self.FileImport()
+            self.FileClose()
+        except IOError:
+            print 'File is not found'
+
+    # 引数がlistのとき
     def ListAct(self, Data):
         CtrData = []
         sleepTime = 0.0
@@ -56,17 +76,8 @@ class move(uart):
                 sleepTime += Datalist[i][1]
         self.Write(self.LongPacket(self.ADDRESS_POS, CtrData))
         time.sleep(sleepTime)
-    def CSVAct(self, FileName, sleep):
-        try:
-            self.FileOpen('parameter/'+FileName)
-            Data = self.DataImport()
-            while Data != None:
-                self.Write(self.LongPacket(self.ADDRESS_POS, Data))
-                time.sleep(sleep)
-                Data = self.DataImport()
-            self.FileClose()
-        except IOError:
-            print 'File is not found'
+
+    # 引数による処理の振分け
     def Action(self, InData, sleep=1.0):
         try:
             CnvData=InData.tolist()
