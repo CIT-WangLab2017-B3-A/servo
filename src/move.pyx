@@ -50,20 +50,22 @@ class move(uart):
     # 引数がファイル名のとき
     def CSVAct(self, FileName, sleep):
         try:
+            # file Open
             self.FileOpen('parameter/'+FileName)
+            # データの読み取り
             Data = self.FileImport()
             while Data != None:
-                self.Write(self.LongPacket(self.ADDRESS_POS, Data))
+                self.Write(self.LongPacket(self.ADDRESS_POSITION, Data))
                 time.sleep(sleep)
                 Data = self.FileImport()
             self.FileClose()
         except IOError:
-            print 'File is not found'
+            print('File is not found')
 
     # 引数がlistのとき
     def ListAct(self, Data):
         CtrData = []
-        sleepTime = 0.0
+        #sleepTime = 0.0
         for Datalist in Data:
             #[[ID],[A1,S1][A2,S2][A3,S3]]
             Group = Datalist.pop(0)# Group
@@ -73,19 +75,24 @@ class move(uart):
                 tmpData = self.Angle_Speed(Datalist[i][0], Datalist[i][1])
                 tmpData.insert(0, VID)
                 CtrData.append(tmpData)
-                sleepTime += Datalist[i][1]
-        self.Write(self.LongPacket(self.ADDRESS_POS, CtrData))
+                #sleepTime += Datalist[i][1] 違う気がする(上も修正)
+                sleepTime = max(sleepTime, Datalist[i][1])
+        self.Write(self.LongPacket(self.ADDRESS_POSITION, CtrData))
         time.sleep(sleepTime)
 
     # 引数による処理の振分け
     def Action(self, InData, sleep=1.0):
         try:
+            # NumPy
             CnvData=InData.tolist()
             self.ListAct(CnvData)
         except AttributeError:
+            # list
             if type(InData)==type([]):
                 self.ListAct(InData)
+            # CSV
             elif type(InData)==type(''):
                 self.CSVAct(InData,sleep)
+            # Other
             else:
-                print 'Value Error(data is File or List)'
+                print('Value Error(data is File or List)')

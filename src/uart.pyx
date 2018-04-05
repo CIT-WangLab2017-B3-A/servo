@@ -7,31 +7,41 @@ import serial
 import time
 class uart(object):
     def __init__(self, port='/dev/ttyS0', rate=115200):
+        # all servos
+        self.ALLSERVOS = 0xFF
         # torque mode
         self.OFF    = 0x00
         self.ON     = 0x01
         self.PANTCH = 0x02
         # address
-        self.ADDRESS_POS = 0x1E
+        self.ADDRESS_ID       = 0x04
+        self.ADDRESS_REVERSE  = 0x05
+        self.ADDRESS_POSITION = 0x1E # position's address
+        self.ADDRESS_TORQUE   = 0x24
+
         # open port
         self.uart = serial.Serial(port, rate)
-    # Write to servo
+
+    # サーボにデータを送信する
     def Write(self, TxData):
         self.uart.write(TxData)
-    # float to int
+
+    # 角度と速度をデータフォーマットどおりに変換
     def Angle_Speed(self, fAngle, fSpeed):
         Angle = int(10.0 *float(fAngle))
         Speed = int(100.0*float(fSpeed))
         tmpData = [Angle, (Angle>>8), Speed, (Speed>>8)]
         Data = map(lambda x:x&0x00FF, tmpData)
         return Data
-    # calculate CheckSum
+
+    # Check-Sumの計算
     def CheckSum(self, Data):
         check=0x00
         for x in Data:
             check ^= x
         return check
-    # ShortPacket
+
+    # Short Packet
     def ShortPacket(self, ID, Flag, Address, Cnt, Data):
         # packet header
         TxData = [0xFA, 0xAF]
@@ -49,6 +59,8 @@ class uart(object):
         tmpData.append(self.CheckSum(tmpData))
         TxData.extend(tmpData)
         return TxData
+
+    # Long Packet
     def LongPacket(self, Address, Data):
         # packet header
         TxData = [0xFA, 0xAF]
@@ -61,55 +73,76 @@ class uart(object):
         tmpData.append(self.CheckSum(tmpData))
         TxData.extend(tmpData)
         return TxData
-    #control func
-    def Reboot(self, ID):
-        TxData = self.ShortPacket(ID, 0x20, 0xFF, 0x00, None)
+
+    # Control func
+    # 再起動
+    def Reboot(self, ID=self.ALLSERVOS):
+        TxData = self.ShortPacket(ID, 0x20, self.ALLSERVOS, 0x00, None)
         self.Write(TxData)
-        print 'Reboot:Finish!'
-    def RomWrite(self, ID):
+        print('Reboot:Finish!')
+
+    # ROMに書き込む
+    def RomWrite(self, ID=self.ALLSERVOS):
         TxData = self.ShortPacket(ID, 0x40, 0xFF, 0x00, None)
         self.Write(TxData)
-        print 'Write ROM:Finish!'
-    def ChangeID(self, NewID):
-        TxData = self.ShortPacket(0xFF, 0x00, 0x04, 0x01, NewID)
+        print('Write ROM:Finish!')
+    
+    # サーボのID変更
+    def ChangeID(self, NewID, ID=self.ALLSERVOS):
+        TxData = self.ShortPacket(ID, 0x00, self.ADDRESS_ID, 0x01, NewID)
         self.Write(TxData)
         self.RomWrite(NewID)
         self.Reboot(NewID)
-        print 'Change ID:Finish!'
-    def Inverse(self, ID, SW):
-        TxData = self.ShortPacket(ID, 0x00, 0x05, 0x01, SW)
+        print('Change ID:Finish!')
+
+    # サーボの回転方向の反転
+    def Reverse(self, ID, SW):
+        TxData = self.ShortPacket(ID, 0x00, self.ADDRESS_REVERSE, 0x01, SW)
         self.Write(TxData)
         self.RomWrite(ID)
         self.Reboot(ID)
-        print 'Inverse Rotate:Finish!'
+        print('Reverse Rotate:Finish!')
+
+    # トルク制御関数
     def Torque(self, ID, SW):
-        TxData = self.ShortPacket(ID, 0x00, 0x24, 0x01, SW)
+        TxData = self.ShortPacket(ID, 0x00, self.ADDRESS_TORQUE, 0x01, SW)
         self.Write(TxData)
+
+    # サーボのトルクを発生させる
     def Start(self):
-        self.Torque(0xFF, self.ON)
+        self.Torque(self.ALLSERVOS, self.ON)
+
+    # サーボをスタンバイモードにする
     def Stop(self):
-        self.Torque(0xFF, self.PANTCH)
+        self.Torque(self.ALLSERVOS, self.PANTCH)
+
+    # 全てのサーボを初期位置に戻す
     def ZeroAll(self):
         Data = self.Angle_Speed(0, 0.01)
-        self.Torque(0xFF, self.ON)
-        TxData = self.ShortPacket(0xFF, 0x00, 0x1E, 0x01, Data)
+        self.Torque(self.ALLSERVOS, self.ON)
+        TxData = self.ShortPacket(self.ALLSERVOS, 0x00, self.ADDRESS_POSITION, 0x01, Data)
         self.Write(TxData)
         time.sleep(2.0)
         self.Stop()
+
     # testProgram
-    def Tester(self,ID):
+    def Tester(self, ID):
         self.Torque(ID, self.ON)
         for j in xrange(2):#two loop
             Data = self.Angle_Speed(30, 0.01)
-            TxData = self.ShortPacket(ID, 0x00, 0x1E, 0x01, Data)
+            TxData = self.ShortPacket(ID, 0x00, self.ADDRESS_POSITION, 0x01, Data)
             self.Write(TxData)
             time.sleep(1.0)
             Data = self.Angle_Speed(0, 0.01)
-            TxData = self.ShortPacket(ID, 0x00, 0x1E, 0x01, Data)
+            TxData = self.ShortPacket(ID, 0x00, self.ADDRESS_POSITION, 0x01, Data)
             self.Write(TxData)
             time.sleep(1.0)
         self.Torque(ID, self.OFF)
+
+    # サーボを落とす
     def Close(self):
-        self.Torque(0xFF,self.OFF)
+        self.Torque(self.ALLSERVOS, self.OFF)
+
+    # デストラクタ
     def __del__(self):
         self.uart.close()
