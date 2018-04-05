@@ -18,7 +18,6 @@ class uart(object):
     # Write to servo
     def Write(self, TxData):
         self.uart.write(TxData)
-        time.sleep(0.06)
     # float to int
     def Angle_Speed(self, fAngle, fSpeed):
         Angle = int(10.0 *float(fAngle))
