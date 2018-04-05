@@ -13,18 +13,7 @@ class move(uart):
         self.LegServos = LEG_SERVOS
         self.Torque(0xFF, self.ON)
 
-    # CSVファイルのopen
-    def FileOpen(self, FileName=None):
-        try:
-            self.fp = open(FileName,'r')
-            self.it = iter(self.fp.readline,'')# イテレータ
-        except:
-            return IOError
-
-    # CSVファイルのopen
-    def FileClose(self):
-        self.fp.close()
-    # CSVファイルのopen
+    # CSVファイルのimport
     def FileImport(self):
         Data = []
         while True:
@@ -34,10 +23,10 @@ class move(uart):
                 return None
             DataList = line[:-1].split(',')# 配列化
             # DataListの処理
-            Group  = DataList[0]# Group
+            Group  = int(DataList[0])# Group
             fSpeed = DataList[1]# Speed
             for i in xrange(self.LegServos):
-                VID    = (3*int(Group)) + (i+1)# ID
+                VID    = (3*Group) + (i+1)# ID
                 fAngle = DataList[i+2]# 角度
                 # float to int
                 CtrData = self.Angle_Speed(fAngle, fSpeed)
@@ -50,15 +39,17 @@ class move(uart):
     # 引数がファイル名のとき
     def CSVAct(self, FileName, sleep):
         try:
-            # file Open
-            self.FileOpen('parameter/'+FileName)
+            # CSVファイルのopen
+            self.fp = open('parameter/'+FileName,'r')
+            self.it = iter(self.fp.readline,'')# イテレータ
             # データの読み取り
             Data = self.FileImport()
             while Data != None:
                 self.Write(self.LongPacket(self.ADDRESS_POSITION, Data))
                 time.sleep(sleep)
                 Data = self.FileImport()
-            self.FileClose()
+            # CSVファイルのclose
+            self.fp.close()
         except IOError:
             print('File is not found')
 
