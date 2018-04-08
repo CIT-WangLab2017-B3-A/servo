@@ -3,10 +3,11 @@
 
 __author__ = 'Hiroki Yumigeta'
 
-import numpy as np
-import sys, os.path
-import serial
+import sys
+import os.path
 import time
+import numpy as np
+import serial
 from uart import *
 class move(uart):
     def __init__(self, LEG_SERVOS=3, port='/dev/ttyS0', rate=115200):

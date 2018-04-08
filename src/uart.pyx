@@ -4,8 +4,8 @@
 __author__ = 'Hiroki Yumigeta'
 
 import sys
-import serial
 import time
+import serial
 class uart(object):
     def __init__(self, port='/dev/ttyS0', rate=115200):
         # all servos
@@ -142,24 +142,6 @@ class uart(object):
         self.Write(TxData)
         time.sleep(2.0)
         self.Stop()
-
-    # testProgram
-    def Tester(self, ID):
-        Flag=0x00
-        print('press ctrl+c to quit')
-        try:
-            self.Torque(ID, self.ON)
-            while True:
-                Data = self.Angle_Speed(30, 0.01)
-                TxData = self.ShortPacket(ID, Flag, self.ADDRESS_POSITION, 0x01, Data)
-                self.Write(TxData)
-                time.sleep(1.0)
-                Data = self.Angle_Speed(0, 0.01)
-                TxData = self.ShortPacket(ID, Flag, self.ADDRESS_POSITION, 0x01, Data)
-                self.Write(TxData)
-                time.sleep(1.0)
-        except KeyboardInterrupt:
-            self.Torque(ID, self.OFF)
 
     # サーボを落とす
     def Close(self):
