@@ -1,7 +1,8 @@
 #!/usr/bin/python
 # coding: utf-8
 
-# urat module made of Hiroki Yumigeta
+__author__ = 'Hiroki Yumigeta'
+
 import sys
 import serial
 import time

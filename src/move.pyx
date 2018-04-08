@@ -1,7 +1,8 @@
 #!/usr/bin/python
 # coding: utf-8
 
-# move module made of Hiroki Yumigeta
+__author__ = 'Hiroki Yumigeta'
+
 import numpy as np
 import sys, os.path
 import serial
