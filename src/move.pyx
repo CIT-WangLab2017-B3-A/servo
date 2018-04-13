@@ -1,13 +1,12 @@
 #!/usr/bin/python
 # coding: utf-8
-
 __author__ = 'Hiroki Yumigeta'
 
-import sys
-import os.path
+#import sys
+#import os.path
 import time
 import numpy as np
-import serial
+#import serial
 from uart import *
 class move(uart):
     def __init__(self, LEG_SERVOS=3, port='/dev/ttyS0', rate=115200):
@@ -28,11 +27,10 @@ class move(uart):
             Group  = int(DataList[0])# Group
             fSpeed = DataList[1]# Speed
             for i in xrange(self.LegServos):
-                VID    = (3*Group) + (i+1)# ID
-                fAngle = DataList[i+2]# 角度
-                # float to int
-                CtrData = self.Angle_Speed(fAngle, fSpeed)
-                CtrData.insert(0,VID)
+                VID     = (3*Group) + (i+1)# ID
+                fAngle  = DataList[i+2]# 角度
+                CtrData = self.Angle_Speed(fAngle, fSpeed)# float to int
+                CtrData.insert(0, VID)
                 Data.append(CtrData)# 2d array
             if DataList[-1] != ('&' or '&'+'\r'):# 配列の最後
                 break
@@ -64,7 +62,7 @@ class move(uart):
             Group = Datalist.pop(0)# Group
             #[[A1,S1][A2,S2][A3,S3]]
             for i in range(len(Datalist)):
-                VID   = (3*int(Group[0])) + (i+1)# ID
+                VID     = (3*int(Group[0])) + (i+1)# ID
                 tmpData = self.Angle_Speed(Datalist[i][0], Datalist[i][1])
                 tmpData.insert(0, VID)
                 CtrData.append(tmpData)
@@ -77,7 +75,7 @@ class move(uart):
     def Action(self, InData, sleep=1.0):
         try:
             # NumPy
-            CnvData=InData.tolist()
+            CnvData = InData.tolist()
             self.ListAct(CnvData)
         except AttributeError:
             # list
@@ -85,7 +83,7 @@ class move(uart):
                 self.ListAct(InData)
             # CSV
             elif type(InData)==type(''):
-                self.CSVAct(InData,sleep)
+                self.CSVAct(InData, sleep)
             # Other
             else:
                 print('Value Error(data is File or List)')
