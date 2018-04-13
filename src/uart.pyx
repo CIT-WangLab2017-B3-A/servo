@@ -82,7 +82,7 @@ class uart(object):
         return TxData
 
     # 再起動
-    def Reboot(self, ID=self.ALLSERVOS):
+    def Reboot(self, ID):
         Length  = 0x00
         Address = 0xFF
         TxData  = self.ShortPacket(ID, self.FLAG_REBOOT, Address, Length, None)
@@ -90,7 +90,7 @@ class uart(object):
         print('Reboot:Finish!')
 
     # ROMに書き込む
-    def RomWrite(self, ID=self.ALLSERVOS):
+    def RomWrite(self, ID):
         Length  = 0x00
         Address = 0xFF
         TxData  = self.ShortPacket(ID, self.FLAG_WRITE_ROM, Address, Length, None)
@@ -98,7 +98,7 @@ class uart(object):
         print('Write ROM:Finish!')
     
     # サーボのID変更
-    def ChangeID(self, NewID, ID=self.ALLSERVOS):
+    def ChangeID(self, NewID, ID):
         Flag   = 0x00
         TxData = self.ShortPacket(ID, Flag, self.ADDRESS_ID, 0x01, NewID)
         self.Write(TxData)

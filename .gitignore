@@ -1,3 +1,4 @@
 *.so
+*.o
 *.back
 src/C_files/*
